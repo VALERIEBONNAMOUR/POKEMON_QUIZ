@@ -1,51 +1,42 @@
-const submitButton = document.getElementById('submit-button');
 const pokemonInput = document.getElementById('pokemon-input');
-const pokeGallery = document.getElementById('pokeapi-gallery');
+const pokemonUrl = 'https://pokeapi.co/api/v2/version/{id or name}/';
 
-// Fonction pour appeler l'API Pokémon
-function fetchPokemonData(pokemonName) {
-    const url = `https://pokeapi.co/api/v2/pokemon/${pokemonName.toLowerCase()}`; // Construire l'URL de l'API
+pokemonInput.addEventListener('change', async (event) => {
+    event.preventDefault(); 
 
-    fetch(url)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Pokémon non trouvé');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Affichage des données du Pokémon
+    const submitButton = document.getElementById('submit-button');
+    const pokeGallery = document.getElementById('pokeapi-gallery');
+    const errorElement = document.querySelector('#error');
+    errorElement.textContent ='';
+    pokeGallery.innerHTML ='';
+
+    if (!pokemonInput){
+        errorElement.textContent ='Entrez le nom de Pokémon';
+        text.style.display = 'none';
+        return;
+    }
+
+    try {
+        const response = await fetch(`${pokemonUrl}${pokemonInput.toLowerCase()}/`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (response.ok) {
+            const data = await response.json(); 
             const pokemonElement = document.createElement('div');
             pokemonElement.classList.add('pokemon');
-
-            const pokemonImage = document.createElement('img');
-            pokemonImage.src = data.sprites.front_default;
-            pokemonElement.appendChild(pokemonImage);
-
-            const pokemonName = document.createElement('h3');
-            pokemonName.textContent = data.name.charAt(0).toUpperCase() + data.name.slice(1); // Capitaliser le nom
-            pokemonElement.appendChild(pokemonName);
-
-            const pokemonTypes = document.createElement('p');
-            pokemonTypes.textContent = `Types: ${data.types.map(type => type.type.name).join(', ')}`;
-            pokemonElement.appendChild(pokemonTypes);
-
-            // Ajouter le Pokémon à la galerie
-            pokeGallery.innerHTML = ''; // Réinitialiser la galerie
+           
             pokeGallery.appendChild(pokemonElement);
-        })
-        .catch(error => {
-            // En cas d'erreur (si le Pokémon n'est pas trouvé)
-            pokeGallery.innerHTML = `<p>${error.message}</p>`;
-        });
-}
+            
+        }else{
+            throw new Error("Pokémon non trouvé");
 
-// Ajouter un événement au bouton pour appeler la fonction lors du clic
-submitButton.addEventListener('click', function() {
-    const pokemonName = pokemonInput.value.trim(); // Récupérer le nom du Pokémon
-    if (pokemonName) {
-        fetchPokemonData(pokemonName); // Appeler la fonction pour récupérer les données
-    } else {
-        pokeGallery.innerHTML = '<p>Veuillez entrer un nom de Pokémon.</p>';
+        }
+
+    } catch (error) {
+        console.error("Erreur lors de l'appel à l'API:", error);
+        errorElement.textContent = error.message;
     }
 });
+
